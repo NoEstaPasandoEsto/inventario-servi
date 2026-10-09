@@ -131,7 +131,7 @@ input, select, button {
   font-size: 0.95rem;
   background: #fff;
 }
-
+ 
 button {
   background: linear-gradient(180deg, var(--primary-1), var(--primary-2));
   color: #111;
