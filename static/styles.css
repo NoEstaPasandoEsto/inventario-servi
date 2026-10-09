@@ -1,0 +1,212 @@
+:root {
+  --primary-1: #879200;
+  --primary-2: #c1c700;
+  --primary-3: #ffff00;
+  --primary-4: #ffff6a;
+  --primary-5: #ffffa2;
+  --bg-1: #000000;
+  --bg-2: #000000;
+  --bg-3: #000000;
+  --bg-4: #323232;
+  --bg-5: #626262;
+  --accent-1: #853a00;
+  --accent-2: #c06b00;
+  --accent-3: #ff9e00;
+  --accent-4: #ffcf52;
+  --accent-5: #ffff8b;
+  --text-dark: #1d1d1d;
+  --panel: #fffef8;
+  --soft: #f7f6dc;
+  --line: rgba(135, 146, 0, 0.25);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(180deg, #121212 0%, #2b2b2b 100%);
+  color: var(--text-dark);
+}
+
+header {
+  background: linear-gradient(90deg, var(--primary-1) 0%, var(--primary-2) 30%, var(--primary-3) 100%);
+  color: var(--bg-1);
+  padding: 1.25rem 2rem;
+  border-bottom: 4px solid var(--accent-3);
+}
+
+h1, h2, h3 {
+  margin-top: 0;
+}
+
+.dashboard {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem 3rem;
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.tab-button {
+  background: linear-gradient(180deg, var(--primary-3), var(--primary-4));
+  color: var(--bg-1);
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  padding: 0.7rem 1.1rem;
+  cursor: pointer;
+  font-weight: 800;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
+}
+
+.tab-button.active {
+  background: linear-gradient(180deg, var(--accent-3), var(--accent-4));
+  color: var(--bg-1);
+  border-color: rgba(0, 0, 0, 0.3);
+}
+
+.tab-panel {
+  display: none;
+}
+
+.tab-panel.active {
+  display: block;
+}
+
+.summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  background: linear-gradient(180deg, rgba(255, 255, 0, 0.9), rgba(255, 255, 138, 0.9));
+}
+
+.print-button {
+  display: inline-block;
+  background: linear-gradient(180deg, var(--accent-1), var(--accent-2));
+  color: #fff;
+  text-decoration: none;
+  border-radius: 8px;
+  padding: 0.7rem 1rem;
+  font-weight: 700;
+  box-shadow: 0 4px 10px rgba(133, 58, 0, 0.25);
+}
+
+.panel {
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--line);
+}
+
+.form-panel {
+  max-width: 620px;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-weight: 600;
+}
+
+input, select, button {
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 8px;
+  padding: 0.7rem 0.85rem;
+  font-size: 0.95rem;
+  background: #fff;
+}
+
+button {
+  background: linear-gradient(180deg, var(--primary-1), var(--primary-2));
+  color: #111;
+  border: none;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+button:hover {
+  background: linear-gradient(180deg, var(--primary-2), var(--primary-3));
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.75rem;
+}
+
+th, td {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  padding: 0.7rem 0.5rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  background: linear-gradient(180deg, var(--primary-5), var(--primary-4));
+  color: var(--bg-1);
+}
+
+.flash-container {
+  max-width: 1200px;
+  margin: 1rem auto 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.flash-message {
+  background: linear-gradient(180deg, #fef9c3, #fef08a);
+  border: 1px solid rgba(133, 58, 0, 0.3);
+  color: #4a2b00;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+}
+
+.distribution-choice {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  font-weight: 600;
+}
+
+.manual-allocation {
+  background: linear-gradient(180deg, var(--soft), #fff7d3);
+  border: 1px solid rgba(193, 199, 0, 0.35);
+  border-radius: 10px;
+  padding: 0.8rem;
+}
+
+.hidden {
+  display: none;
+}
+
+#manual-allocation-fields {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 0.6rem;
+}
+
+#manual-allocation-fields label {
+  display: grid;
+  grid-template-columns: 1fr 120px;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+}

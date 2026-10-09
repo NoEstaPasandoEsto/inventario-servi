@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Inventario por Municipio y Asesor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    <header>
+      <div>
+        <h1>Inventario por Municipio y Asesor</h1>
+      </div>
+    </header>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="flash-container">
+          {% for message in messages %}
+            <div class="flash-message">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <main class="dashboard">
+      <nav class="tabs" aria-label="Secciones del inventario">
+        <button class="tab-button active" data-target="summary-tab">Resumen</button>
+        <button class="tab-button" data-target="products-tab">Productos</button>
+        <button class="tab-button" data-target="municipalities-tab">Municipios</button>
+        <button class="tab-button" data-target="advisors-tab">Asesores</button>
+        <button class="tab-button" data-target="entries-tab">Entradas</button>
+        <button class="tab-button" data-target="outputs-tab">Salidas</button>
+        <button class="tab-button" data-target="history-tab">Historial</button>
+      </nav>
+
+      <section id="summary-tab" class="tab-panel active">
+        <div class="panel summary-header">
+          <div>
+            <h2>Resumen general</h2>
+          </div>
+          <a class="print-button" href="{{ url_for('report_view') }}" target="_blank">Imprimir resumen PDF</a>
+        </div>
+        <div class="panel">
+          <table>
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Municipio</th>
+                <th>Stock total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in summary %}
+              <tr>
+                <td>{{ row.product_name }}</td>
+                <td>{{ row.municipality_name }}</td>
+                <td>{{ row.total_quantity }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="panel">
+          <h2>Disponibilidad por asesor</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Municipio</th>
+                <th>Asesor</th>
+                <th>Disponible</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in stocks %}
+              <tr>
+                <td>{{ row.product_name }}</td>
+                <td>{{ row.municipality_name }}</td>
+                <td>{{ row.advisor_name or 'Sin asignar' }}</td>
+                <td>{{ row.quantity }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="products-tab" class="tab-panel">
+        <div class="panel form-panel">
+          <h2>Registrar producto</h2>
+          <form method="post" action="{{ url_for('create_product') }}">
+            <label>Nombre
+              <input type="text" name="name" required />
+            </label>
+            <label>SKU
+              <input type="text" name="sku" />
+            </label>
+            <label>Unidad
+              <input type="text" name="unit" value="unidad" />
+            </label>
+            <button type="submit">Guardar</button>
+          </form>
+        </div>
+      </section>
+
+      <section id="municipalities-tab" class="tab-panel">
+        <div class="panel form-panel">
+          <h2>Registrar municipio</h2>
+          <form method="post" action="{{ url_for('create_municipality') }}">
+            <label>Nombre del municipio
+              <input type="text" name="name" required />
+            </label>
+            <button type="submit">Guardar</button>
+          </form>
+        </div>
+      </section>
+
+      <section id="advisors-tab" class="tab-panel">
+        <div class="panel form-panel">
+          <h2>Registrar asesor</h2>
+          <form method="post" action="{{ url_for('create_advisor') }}">
+            <label>Nombre
+              <input type="text" name="name" required />
+            </label>
+            <label>Municipio
+              <select name="municipality_id" required>
+                {% for municipality in municipalities %}
+                <option value="{{ municipality.id }}">{{ municipality.name }}</option>
+                {% endfor %}
+              </select>
+            </label>
+            <button type="submit">Guardar</button>
+          </form>
+        </div>
+      </section>
+
+      <section id="entries-tab" class="tab-panel">
+        <div class="panel form-panel">
+          <h2>Ingreso de inventario</h2>
+          <form method="post" action="{{ url_for('create_entry') }}">
+            <label>Producto
+              <select name="product_id" required>
+                {% for product in products %}
+                <option value="{{ product.id }}">{{ product.name }}</option>
+                {% endfor %}
+              </select>
+            </label>
+            <label>Municipio
+              <select name="municipality_id" id="entry-municipality" required>
+                {% for municipality in municipalities %}
+                <option value="{{ municipality.id }}">{{ municipality.name }}</option>
+                {% endfor %}
+              </select>
+            </label>
+            <label>Cantidad total
+              <input type="number" name="quantity" min="1" required />
+            </label>
+            <label>Observación
+              <input type="text" name="note" placeholder="Ej: compra, donación, abastecimiento" />
+            </label>
+
+            <div class="distribution-choice">
+              <label><input type="radio" name="distribution_mode" value="auto" checked /> Distribución automática</label>
+              <label><input type="radio" name="distribution_mode" value="manual" /> Distribución manual</label>
+            </div>
+
+            <div id="manual-allocation" class="manual-allocation hidden">
+              <h3>Asignación por asesor</h3>
+              <div id="manual-allocation-fields"></div>
+            </div>
+
+            <button type="submit">Registrar ingreso</button>
+          </form>
+        </div>
+      </section>
+
+      <section id="outputs-tab" class="tab-panel">
+        <div class="panel form-panel">
+          <h2>Salida de inventario</h2>
+          <form method="post" action="{{ url_for('create_output') }}">
+            <label>Producto
+              <select name="product_id" required>
+                {% for product in products %}
+                <option value="{{ product.id }}">{{ product.name }}</option>
+                {% endfor %}
+              </select>
+            </label>
+            <label>Municipio
+              <select name="municipality_id" required>
+                {% for municipality in municipalities %}
+                <option value="{{ municipality.id }}">{{ municipality.name }}</option>
+                {% endfor %}
+              </select>
+            </label>
+            <label>Asesor
+              <select name="advisor_id" required>
+                {% for advisor in advisors %}
+                <option value="{{ advisor.id }}">{{ advisor.name }} ({{ advisor.municipality_name }})</option>
+                {% endfor %}
+              </select>
+            </label>
+            <label>Cantidad
+              <input type="number" name="quantity" min="1" required />
+            </label>
+            <label>Motivo
+              <input type="text" name="note" placeholder="Entrega, venta, uso interno" />
+            </label>
+            <button type="submit">Registrar salida</button>
+          </form>
+        </div>
+      </section>
+
+      <section id="history-tab" class="tab-panel">
+        <div class="panel">
+          <h2>Historial de movimientos</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Producto</th>
+                <th>Municipio</th>
+                <th>Asesor</th>
+                <th>Tipo</th>
+                <th>Cantidad</th>
+                <th>Nota</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for movement in movements %}
+              <tr>
+                <td>{{ movement.created_at }}</td>
+                <td>{{ movement.product_name }}</td>
+                <td>{{ movement.municipality_name }}</td>
+                <td>{{ movement.advisor_name or 'Sin asignar' }}</td>
+                <td>{{ 'Ingreso' if movement.type == 'entry' else 'Salida' }}</td>
+                <td>{{ movement.quantity }}</td>
+                <td>{{ movement.note or '-' }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const advisorMap = {{ advisor_map | tojson }};
+      const municipalitySelect = document.getElementById('entry-municipality');
+      const manualAllocationContainer = document.getElementById('manual-allocation');
+      const manualFields = document.getElementById('manual-allocation-fields');
+
+      function toggleManualAllocation() {
+        const selected = municipalitySelect ? municipalitySelect.value : '';
+        const checkedMode = document.querySelector('input[name="distribution_mode"][value="manual"]:checked');
+        const advisors = advisorMap[selected] || [];
+
+        manualFields.innerHTML = '';
+        if (checkedMode && advisors.length > 0) {
+          manualAllocationContainer.classList.remove('hidden');
+          advisors.forEach((advisor) => {
+            const wrapper = document.createElement('label');
+            wrapper.textContent = advisor.name;
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.min = '0';
+            input.name = `alloc_${advisor.id}`;
+            input.value = '0';
+            wrapper.appendChild(input);
+            manualFields.appendChild(wrapper);
+          });
+        } else {
+          manualAllocationContainer.classList.add('hidden');
+        }
+      }
+
+      const tabButtons = document.querySelectorAll('.tab-button');
+      const tabPanels = document.querySelectorAll('.tab-panel');
+
+      tabButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          tabButtons.forEach((btn) => btn.classList.toggle('active', btn === button));
+          tabPanels.forEach((panel) => panel.classList.toggle('active', panel.id === `${button.dataset.target}`));
+        });
+      });
+
+      if (municipalitySelect) {
+        municipalitySelect.addEventListener('change', toggleManualAllocation);
+      }
+      document.querySelectorAll('input[name="distribution_mode"]').forEach((radio) => {
+        radio.addEventListener('change', toggleManualAllocation);
+      });
+      toggleManualAllocation();
+    </script>
+  </body>
+</html>

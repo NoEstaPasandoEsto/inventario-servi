@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Resumen de inventario por municipio</title>
+    <style>
+      :root {
+        --primary-1: #879200;
+        --primary-2: #c1c700;
+        --primary-3: #ffff00;
+        --primary-4: #ffff6a;
+        --primary-5: #ffffa2;
+        --bg-1: #000000;
+        --bg-4: #323232;
+        --bg-5: #626262;
+        --accent-1: #853a00;
+        --accent-2: #c06b00;
+        --accent-3: #ff9e00;
+        --accent-4: #ffcf52;
+        --accent-5: #ffff8b;
+        --muted: #4b5563;
+        --line: rgba(135, 146, 0, 0.25);
+        --soft: #f9f9d8;
+        --bg: #f5f5f0;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: linear-gradient(180deg, #1f1f1f 0%, #2b2b2b 100%);
+        color: #111827;
+      }
+
+      .page {
+        max-width: 1100px;
+        margin: 20px auto;
+        padding: 24px;
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 3px solid var(--accent-3);
+        background: linear-gradient(90deg, var(--primary-1), var(--primary-2), var(--primary-3));
+        padding: 14px 18px;
+        border-radius: 12px 12px 0 0;
+        margin-bottom: 18px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 28px;
+      }
+
+      .print-action {
+        display: inline-block;
+        padding: 10px 16px;
+        background: linear-gradient(180deg, var(--accent-1), var(--accent-2));
+        color: white;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: bold;
+      }
+
+      .municipality {
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        padding: 18px;
+        margin-bottom: 18px;
+      }
+
+      .municipality h2 {
+        margin: 0 0 12px 0;
+        color: var(--bg-1);
+        font-size: 24px;
+        background: linear-gradient(90deg, var(--primary-5), var(--primary-4));
+        border-radius: 8px;
+        padding: 8px 12px;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(160px, 1fr));
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .stat-box {
+        background: linear-gradient(180deg, var(--soft), #fffbe9);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 10px 12px;
+      }
+
+      .label {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+        margin-bottom: 4px;
+      }
+
+      .value {
+        font-size: 22px;
+        font-weight: 700;
+      }
+
+      .content-grid {
+        display: grid;
+        grid-template-columns: 1.2fr 1.8fr;
+        gap: 18px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+
+      th, td {
+        border: 1px solid var(--line);
+        padding: 8px 10px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        background: linear-gradient(180deg, var(--primary-5), var(--primary-4));
+        color: #111827;
+      }
+
+      .movement-type {
+        font-weight: 700;
+      }
+
+      .movement-type.entry { color: #166534; }
+      .movement-type.output { color: #8a2a00; }
+
+      @media (max-width: 820px) {
+        .content-grid,
+        .stats {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media print {
+        body {
+          background: white;
+        }
+
+        .print-action {
+          display: none;
+        }
+
+        .page {
+          max-width: none;
+          margin: 0;
+          padding: 0;
+        }
+
+        .municipality {
+          page-break-inside: avoid;
+          box-shadow: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="header">
+        <h1>Resumen de inventario</h1>
+        <a class="print-action" href="javascript:window.print()">Imprimir / Guardar PDF</a>
+      </div>
+
+      {% for report in municipality_reports %}
+        <section class="municipality">
+          <h2>{{ report.municipality.name }}</h2>
+
+          <div class="stats">
+            <div class="stat-box">
+              <span class="label">Entradas</span>
+              <span class="value">{{ report.totals.total_entries or 0 }}</span>
+            </div>
+            <div class="stat-box">
+              <span class="label">Salidas</span>
+              <span class="value">{{ report.totals.total_outputs or 0 }}</span>
+            </div>
+            <div class="stat-box">
+              <span class="label">Saldo neto</span>
+              <span class="value">{{ report.totals.net_balance or 0 }}</span>
+            </div>
+          </div>
+
+          <div class="content-grid">
+            <div>
+              <h3>Stock por producto</h3>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Producto</th>
+                    <th>Disponible</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for item in report.products %}
+                    <tr>
+                      <td>{{ item.product_name }}</td>
+                      <td>{{ item.total_quantity }}</td>
+                    </tr>
+                  {% else %}
+                    <tr><td colspan="2">Sin productos registrados</td></tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+
+            <div>
+              <h3>Disponibilidad por asesor</h3>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Asesor</th>
+                    <th>Stock</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for advisor in report.advisors %}
+                    <tr>
+                      <td>{{ advisor.advisor_name }}</td>
+                      <td>{{ advisor.total_quantity }}</td>
+                    </tr>
+                  {% else %}
+                    <tr><td colspan="2">Sin asesores registrados</td></tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div style="margin-top: 18px;">
+            <h3>Últimos movimientos</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Producto</th>
+                  <th>Asesor</th>
+                  <th>Tipo</th>
+                  <th>Cantidad</th>
+                  <th>Nota</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for movement in report.movements %}
+                  <tr>
+                    <td>{{ movement.created_at }}</td>
+                    <td>{{ movement.product_name }}</td>
+                    <td>{{ movement.advisor_name or 'Sin asignar' }}</td>
+                    <td class="movement-type {{ 'entry' if movement.type == 'entry' else 'output' }}">
+                      {{ 'Entrada' if movement.type == 'entry' else 'Salida' }}
+                    </td>
+                    <td>{{ movement.quantity }}</td>
+                    <td>{{ movement.note or '-' }}</td>
+                  </tr>
+                {% else %}
+                  <tr><td colspan="6">Sin movimientos registrados</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      {% endfor %}
+    </div>
+  </body>
+</html>
