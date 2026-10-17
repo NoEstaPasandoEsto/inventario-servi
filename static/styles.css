@@ -144,6 +144,167 @@ button:hover {
   background: linear-gradient(180deg, var(--primary-2), var(--primary-3));
 }
 
+.tab-link {
+  color: inherit;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.back-link {
+  color: var(--bg-1);
+  font-weight: 700;
+}
+
+.date-panel,
+.form-grid,
+.form-actions,
+.inline-form {
+  display: flex;
+  align-items: end;
+  gap: 1rem;
+}
+
+.date-panel {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.date-panel h2,
+.date-panel p {
+  margin-bottom: 0.35rem;
+}
+
+.inline-form {
+  flex-wrap: wrap;
+}
+
+.form-grid > label {
+  flex: 1 1 240px;
+}
+
+.form-actions {
+  justify-content: space-between;
+  margin-top: 1rem;
+}
+
+.remove-line {
+  background: linear-gradient(180deg, var(--bg-4), var(--bg-5));
+  color: #fff;
+}
+
+.remove-line {
+  padding: 0.55rem 0.7rem;
+}
+
+.remove-line:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.status-active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-inactive {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.status-button {
+  padding: 0.5rem 0.7rem;
+  white-space: nowrap;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.aforo-lines input {
+  min-width: 100px;
+  width: 100%;
+}
+
+.autocomplete {
+  position: relative;
+}
+
+.autocomplete-options {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 2px);
+  right: 0;
+  left: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+}
+
+.autocomplete-options[hidden] {
+  display: none;
+}
+
+.autocomplete-option {
+  display: block;
+  width: 100%;
+  padding: 0.65rem 0.8rem;
+  border-radius: 0;
+  background: #fff;
+  color: var(--text-dark);
+  text-align: left;
+}
+
+.autocomplete-option:hover,
+.autocomplete-option.active {
+  background: linear-gradient(180deg, var(--primary-5), var(--primary-4));
+}
+
+.aforo-record {
+  border-top: 1px solid var(--line);
+  margin-top: 1rem;
+  padding-top: 1rem;
+}
+
+.record-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+}
+
+.record-heading h3,
+.record-heading p {
+  margin-bottom: 0.4rem;
+}
+
+.catalog-list {
+  overflow-wrap: anywhere;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -209,4 +370,22 @@ th {
   align-items: center;
   gap: 0.5rem;
   font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .date-panel,
+  .record-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .inline-form,
+  .inline-form label {
+    width: 100%;
+  }
+
+  .form-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
 }

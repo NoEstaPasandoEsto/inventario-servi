@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Registro de aforos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    <header>
+      <div>
+        <h1>Registro de aforos</h1>
+        <a class="back-link" href="{{ url_for('index') }}">Volver al inventario</a>
+      </div>
+    </header>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="flash-container">
+          {% for message in messages %}
+            <div class="flash-message">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <main class="dashboard">
+      <section class="panel date-panel">
+        <div>
+          <h2>Fecha activa</h2>
+          <p>Los siguientes aforos usarán esta fecha hasta que la cambies.</p>
+        </div>
+        <form method="post" action="{{ url_for('aforos_module.change_aforo_date') }}" class="inline-form">
+          <label for="record-date">Fecha de los aforos
+            <input id="record-date" type="date" name="record_date" value="{{ aforo_date }}" required />
+          </label>
+          <button type="submit">Fijar fecha</button>
+        </form>
+      </section>
+
+      <section class="panel">
+        <h2>Nuevo aforo</h2>
+        {% if not containers %}
+          <p>Agrega primero un recipiente al catálogo para poder registrar un aforo.</p>
+        {% endif %}
+        <form method="post" action="{{ url_for('aforos_module.create_aforo') }}">
+          <div class="form-grid">
+            <label for="client-name">Usuario o cliente
+              <div class="autocomplete">
+                <input id="client-name" type="text" name="client_name" autocomplete="off" aria-autocomplete="list" required />
+                <div class="autocomplete-options" role="listbox" hidden></div>
+              </div>
+            </label>
+            <label for="aforo-number">Número de aforo / factura
+              <input id="aforo-number" type="text" name="aforo_number" maxlength="100" required />
+            </label>
+          </div>
+
+          <div class="table-scroll">
+            <table class="aforo-lines">
+              <thead>
+                <tr>
+                  <th>Recipiente</th>
+                  <th>Cantidad</th>
+                  <th>Observación</th>
+                  <th><span class="visually-hidden">Acción</span></th>
+                </tr>
+              </thead>
+              <tbody id="aforo-lines">
+                <tr>
+                  <td>
+                    <div class="autocomplete">
+                      <input type="text" name="container[]" autocomplete="off" placeholder="Escriba para buscar" aria-autocomplete="list" />
+                      <div class="autocomplete-options" role="listbox" hidden></div>
+                    </div>
+                  </td>
+                  <td><input type="number" name="quantity[]" min="1" step="1" inputmode="numeric" /></td>
+                  <td><input type="text" name="observation[]" /></td>
+                  <td><button class="remove-line" type="button" aria-label="Quitar fila" disabled>Quitar</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="form-actions">
+            <button id="save-aforo" type="submit">Guardar aforo</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel form-panel">
+        <h2>Catálogo de recipientes</h2>
+        <form method="post" action="{{ url_for('aforos_module.add_container') }}">
+          <label for="new-container">Agregar recipiente
+            <input id="new-container" type="text" name="name" maxlength="100" required />
+          </label>
+          <button type="submit">Guardar recipiente</button>
+        </form>
+        {% if containers %}
+          <p class="catalog-list"><strong>Disponibles:</strong> {{ containers | join(", ") }}</p>
+        {% endif %}
+      </section>
+
+      <section class="panel">
+        <h2>Usuarios registrados</h2>
+        {% if clients %}
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr><th>Usuario</th><th>Estado</th><th>Acción</th></tr>
+              </thead>
+              <tbody>
+                {% for client in clients %}
+                  <tr>
+                    <td>{{ client.name }}</td>
+                    <td>
+                      <span class="status-badge {{ 'status-active' if client.active else 'status-inactive' }}">
+                        {{ 'Activo' if client.active else 'Inactivo' }}
+                      </span>
+                    </td>
+                    <td>
+                      <form method="post" action="{{ url_for('aforos_module.change_client_status', client_id=client.id) }}">
+                        <input type="hidden" name="active" value="{{ 0 if client.active else 1 }}" />
+                        <button class="status-button" type="submit">
+                          {{ 'Desactivar' if client.active else 'Activar' }}
+                        </button>
+                      </form>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <p>Los usuarios se agregarán al catálogo al guardar su primer aforo.</p>
+        {% endif %}
+      </section>
+
+      <section class="panel">
+        <h2>Aforos recientes</h2>
+        {% if records %}
+          {% for record in records %}
+            <article class="aforo-record">
+              <div class="record-heading">
+                <h3>Aforo / factura {{ record.aforo_number }}</h3>
+                <p>{{ record.client_name }} · {{ record.record_date }}</p>
+              </div>
+              <div class="table-scroll">
+                <table>
+                  <thead>
+                    <tr><th>Recipiente</th><th>Cantidad</th><th>Observación</th></tr>
+                  </thead>
+                  <tbody>
+                    {% for item in record.aforo_items %}
+                      <tr>
+                        <td>{{ item.container_name }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>{{ item.observation or '-' }}</td>
+                      </tr>
+                    {% else %}
+                      <tr><td colspan="3">Aforo guardado sin detalle de recipientes.</td></tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </article>
+          {% endfor %}
+        {% else %}
+          <p>Aún no hay aforos registrados.</p>
+        {% endif %}
+      </section>
+    </main>
+
+    <script>
+      const lines = document.getElementById('aforo-lines');
+      const saveButton = document.getElementById('save-aforo');
+      const containerOptions = {{ containers | tojson }};
+      const clientOptions = {{ active_clients | map(attribute='name') | list | tojson }};
+      let nextSuggestionId = 0;
+
+      function matchingOptions(value, options) {
+        const query = value.trim().toLocaleLowerCase();
+        if (!query) {
+          return options;
+        }
+        return options.filter((name) =>
+          name.toLocaleLowerCase().includes(query)
+        );
+      }
+
+      function optionsFor(input) {
+        return input.name === 'client_name' ? clientOptions : containerOptions;
+      }
+
+      function matchingOptionsFor(input) {
+        return matchingOptions(input.value, optionsFor(input));
+      }
+
+      function hideSuggestions(input) {
+        const listbox = input.parentElement.querySelector('.autocomplete-options');
+        listbox.hidden = true;
+        listbox.replaceChildren();
+        input.removeAttribute('aria-activedescendant');
+        input.dataset.selectedIndex = '';
+      }
+
+      function setActiveSuggestion(input, index) {
+        const listbox = input.parentElement.querySelector('.autocomplete-options');
+        const options = listbox.querySelectorAll('[role="option"]');
+        if (!options.length) {
+          return;
+        }
+        const selectedIndex = (index + options.length) % options.length;
+        options.forEach((option, optionIndex) => {
+          option.classList.toggle('active', optionIndex === selectedIndex);
+          option.setAttribute('aria-selected', String(optionIndex === selectedIndex));
+        });
+        input.dataset.selectedIndex = String(selectedIndex);
+        input.setAttribute('aria-activedescendant', options[selectedIndex].id);
+      }
+
+      function showSuggestions(input) {
+        const listbox = input.parentElement.querySelector('.autocomplete-options');
+        const matches = matchingOptionsFor(input);
+        listbox.replaceChildren();
+        input.dataset.selectedIndex = '';
+        input.removeAttribute('aria-activedescendant');
+
+        matches.forEach((name) => {
+          const option = document.createElement('button');
+          option.type = 'button';
+          option.id = `container-option-${nextSuggestionId++}`;
+          option.className = 'autocomplete-option';
+          option.tabIndex = -1;
+          option.setAttribute('role', 'option');
+          option.setAttribute('aria-selected', 'false');
+          option.textContent = name;
+          listbox.appendChild(option);
+        });
+        listbox.hidden = matches.length === 0;
+      }
+
+      function selectSuggestion(input, index = 0) {
+        const matches = matchingOptionsFor(input);
+        if (matches.length === 0) {
+          return false;
+        }
+        const selectedIndex = index >= 0 && index < matches.length ? index : 0;
+        input.value = matches[selectedIndex];
+        hideSuggestions(input);
+        return true;
+      }
+
+      function addLine() {
+        const row = lines.querySelector('tr').cloneNode(true);
+        row.querySelectorAll('input').forEach((input) => {
+          input.value = '';
+        });
+        lines.appendChild(row);
+        updateRemoveButtons();
+        row.querySelector('input[name="container[]"]').focus();
+      }
+
+      function updateRemoveButtons() {
+        const buttons = lines.querySelectorAll('.remove-line');
+        buttons.forEach((button) => {
+          button.disabled = buttons.length === 1;
+        });
+      }
+
+      const aforoForm = saveButton.form;
+
+      aforoForm.addEventListener('click', (event) => {
+        const suggestion = event.target.closest('.autocomplete-option');
+        if (suggestion) {
+          const input = suggestion.closest('.autocomplete').querySelector('input');
+          input.value = suggestion.textContent;
+          hideSuggestions(input);
+          input.focus();
+          return;
+        }
+
+        const button = event.target.closest('.remove-line');
+        if (button && lines.querySelectorAll('tr').length > 1) {
+          button.closest('tr').remove();
+          updateRemoveButtons();
+        }
+      });
+
+      aforoForm.addEventListener('focusin', (event) => {
+        if (event.target.matches('.autocomplete input')) {
+          showSuggestions(event.target);
+        }
+      });
+
+      aforoForm.addEventListener('input', (event) => {
+        if (event.target.matches('.autocomplete input')) {
+          showSuggestions(event.target);
+        }
+      });
+
+      aforoForm.addEventListener('keydown', (event) => {
+        const isAutocompleteInput = event.target.matches('.autocomplete input');
+
+        if (event.key === 'Enter' && event.target.matches('input')) {
+          event.preventDefault();
+          if (isAutocompleteInput && event.target.value.trim()) {
+            const selectedIndex = Number(event.target.dataset.selectedIndex);
+            if (!selectSuggestion(event.target, Number.isInteger(selectedIndex) ? selectedIndex : 0)) {
+              if (event.target.name === 'client_name') {
+                event.target.form.requestSubmit();
+                return;
+              }
+              event.target.setCustomValidity('Seleccione un recipiente del catálogo.');
+              event.target.reportValidity();
+              event.target.setCustomValidity('');
+              return;
+            }
+          }
+          if (isAutocompleteInput) {
+            hideSuggestions(event.target);
+          }
+          event.target.form.requestSubmit();
+          return;
+        }
+
+        if (isAutocompleteInput) {
+          if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+            const options = event.target.parentElement.querySelectorAll('[role="option"]');
+            if (options.length) {
+              event.preventDefault();
+              const currentIndex = Number(event.target.dataset.selectedIndex);
+              const delta = event.key === 'ArrowDown' ? 1 : -1;
+              setActiveSuggestion(
+                event.target,
+                Number.isInteger(currentIndex) ? currentIndex + delta : (delta > 0 ? 0 : options.length - 1)
+              );
+            }
+            return;
+          }
+          if (event.key === 'Escape') {
+            hideSuggestions(event.target);
+            return;
+          }
+        }
+
+        if (event.key !== 'Tab') {
+          return;
+        }
+
+        if (isAutocompleteInput) {
+          const input = event.target;
+          if (event.shiftKey) {
+            hideSuggestions(input);
+            return;
+          }
+          if (input.name === 'container[]' && !input.value.trim()) {
+            event.preventDefault();
+            hideSuggestions(input);
+            saveButton.focus();
+            return;
+          }
+          if (input.value.trim()) {
+            const selectedIndex = Number(input.dataset.selectedIndex);
+            if (selectSuggestion(input, Number.isInteger(selectedIndex) ? selectedIndex : 0)) {
+              return;
+            }
+          }
+          hideSuggestions(input);
+        }
+
+        if (event.target.matches('input[name="observation[]"]')) {
+          event.preventDefault();
+          addLine();
+        }
+      });
+
+      document.addEventListener('click', (event) => {
+        document.querySelectorAll('.autocomplete input').forEach((input) => {
+          if (!input.parentElement.contains(event.target)) {
+            hideSuggestions(input);
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
